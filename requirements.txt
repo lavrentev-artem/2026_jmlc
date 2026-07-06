@@ -1,3 +1,6 @@
+--index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://pypi.org/simple
+
 datasets==5.0.0
 pandas==3.0.3
 python-dotenv==1.2.2
@@ -6,3 +9,7 @@ matplotlib==3.11.0
 numpy==2.5.0rc1
 seaborn==0.13.2
 scikit-learn==1.9.0
+transformers==5.12.1
+accelerate==1.14.0
+setuptools==80.9.0
+torch==2.12.1

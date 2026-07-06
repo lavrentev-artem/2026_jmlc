@@ -1,0 +1,10 @@
+[server]
+runOnSave=true
+
+[client]
+showErrorDetails=false
+showSidebarNavigation=false
+toolbarMode="minimal"
+
+[browser]
+gatherUsageStats=false

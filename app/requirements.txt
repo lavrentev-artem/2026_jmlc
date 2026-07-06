@@ -1,0 +1,10 @@
+fastapi==0.129.0
+requests==2.32.4
+psycopg[binary]==3.3.3
+pydantic-settings==2.13.1
+sqlmodel==0.0.34
+uvicorn[standard]==0.34.0
+bcrypt==5.0.0
+PyJWT==2.11.0
+python-multipart==0.0.22
+aio-pika==9.6.1
