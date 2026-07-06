@@ -1,0 +1,8 @@
+pydantic-settings
+aio_pika
+pika
+torch
+transformers
+accelerate
+bitsandbytes
+scipy
