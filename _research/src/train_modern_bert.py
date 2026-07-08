@@ -78,20 +78,20 @@ class ModernBertTrainer:
             tokenizer=self.tokenizer
         )
 
-        # Настройки обучения для GPU средней мощности (11GB VRAM)
+        # Необходимо переключить настройки в зависимости от GPU
         training_args = TrainingArguments(
             output_dir=output_dir,
             learning_rate=2e-5,
-            # per_device_train_batch_size=16,   # Для старых моделей GPU
-            per_device_train_batch_size=64,     # Для современных моделей GPU
+            per_device_train_batch_size=16,   # Для старых моделей GPU
+            # per_device_train_batch_size=64,     # Для современных моделей GPU
             per_device_eval_batch_size=16,
             num_train_epochs=1,
             weight_decay=0.01,
             eval_strategy="epoch",
             save_strategy="epoch",
             load_best_model_at_end=True,
-            # fp16=True,    # Для старых моделей GPU
-            bf16=True,      # Для современных моделей GPU
+            fp16=True,    # Для старых моделей GPU
+            # bf16=True,      # Для современных моделей GPU
             logging_steps=100,
             report_to="none"
         )
