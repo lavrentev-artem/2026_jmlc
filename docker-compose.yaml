@@ -23,9 +23,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-  ml-worker:
+  worker-llm:
     build:
-      context: ./ml-worker
+      context: ./worker-llm
       dockerfile: Dockerfile
     deploy:
       resources:
@@ -37,12 +37,14 @@ services:
     environment:
       - API_URL=${API_URL}
       - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
-    container_name: ml-worker
+      - HF_HOME=/weights_cache
+    container_name: worker-llm
     restart: unless-stopped
     env_file:
       - .env
     volumes:
-      - ./ml-worker:/ml-worker
+      - ./worker-llm:/app
+      - hf-weights-cache:/weights_cache
     networks:
       - app-network
     depends_on:
@@ -133,6 +135,7 @@ volumes:
   postgres-data:
   pgadmin-data:
   rabbitmq-data:
+  hf-weights-cache:
 
 
 networks:

@@ -1,8 +1,8 @@
 import streamlit as st
 from utils import sign_in, get_me
 
-st.title("Video games recommendation")
-st.write("#### Tell the chatbot your favorite video games, and it will recommend a game you would like to play.")
+st.title("Чатбот")
+st.write("#### Умеет разговаривать на общие темы")
 
 
 # Switch off technical menu
@@ -30,28 +30,28 @@ st.markdown("""
 
 st.write("###")
 
-st.title("Sign in")
+st.title("Войти в сервис")
 with st.form("sign_in_form"):
     email = st.text_input("Email")
-    password = st.text_input(label="Password", type="password")
-    submit = st.form_submit_button(label="Sign in")
+    password = st.text_input(label="Пароль", type="password")
+    submit = st.form_submit_button(label="Войти")
 
     if submit:
         if token_data := sign_in(email, password):
             st.session_state.access_token = token_data["access_token"]
             st.session_state.user_data = get_me(token_data["access_token"])
-            st.success("You are now logged in!")
+            st.success("Вы вошли!")
             st.switch_page("main.py")
         else:
-            st.error("Invalid Credentials")
+            st.error("Неверный Email или пароль!")
 
 st.write('#####')
 st.divider()
 
 col1, col2 = st.columns([0.75, 0.15])
 with col1:
-    st.subheader("Not registered yet?")
+    st.subheader("Ещё не зарегистрированы?")
 with col2:
     st.write('')
-    if st.button("Sign up"):
+    if st.button("Создать аккаунт"):
         st.switch_page("pages/sign_up.py")

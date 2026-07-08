@@ -6,8 +6,8 @@ from utils import check_auth, sign_in, get_me, get_balance_transactions
 token = check_auth()
 user_data = get_me(token)
 
-st.title("Balance history")
-st.write("##### List of all balance transactions")
+st.title("История баланса")
+st.write("##### Список всех транзакций")
 
 # Switch off technical menu
 st.markdown("""
@@ -35,7 +35,7 @@ st.markdown("""
 
 col1, col2 = st.columns([0.15, 0.75])
 with col1:
-    if st.button("< Return"):
+    if st.button("< Назад"):
         st.switch_page("main.py")
 with col2:
     st.write("")
@@ -46,10 +46,10 @@ balance_history = get_balance_transactions(user_data.get("id"), token)
 
 if balance_history:
     h_1, h_2, h_3, h_4 = st.columns(4)
-    h_1.write("**Date**")
-    h_2.write("**Sum**")
-    h_3.write("**Type**")
-    h_4.write("**Description**")
+    h_1.write("**Дата**")
+    h_2.write("**Сумма**")
+    h_3.write("**Тип**")
+    h_4.write("**Описание**")
 
     for tx in balance_history:
         col1, col2, col3, col4 = st.columns(4)
@@ -61,5 +61,5 @@ if balance_history:
         col3.write(tx.get("transaction_type"))
         col4.write(tx.get("description"))
 else:
-    st.info("No balance transactions")
+    st.info("Транзакции не найдены")
 
