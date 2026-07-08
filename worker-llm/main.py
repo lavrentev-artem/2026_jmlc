@@ -5,7 +5,7 @@ import json
 
 from adapters.rabbitmq_client import RabbitMQClient
 from config.config import get_settings
-from mlw_services.ml_processor import process_ml_task, process_ml_task_mock
+from mlw_services.ml_processor import process_ml_task
 
 
 logging.basicConfig(

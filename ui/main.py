@@ -12,7 +12,7 @@ from utils import (check_auth, get_me, get_operation_list,
 
 # noinspection PyBroadException
 try:
-    st.set_page_config(page_title="Games recommend", layout="centered")
+    st.set_page_config(page_title="Чатбот", layout="centered")
 
     # Switch off technical menu
     st.markdown("""
@@ -49,7 +49,7 @@ try:
     user_data = get_me(token)
 
     # Render header
-    st.title("Video games recommendation")
+    st.title("Чатбот")
 
 
     if user_data:
@@ -61,10 +61,10 @@ try:
 
         col1, col2 = st.columns([0.8, 0.2])
         with col1:
-            st.subheader(f'Welcome, {full_name}!')
+            st.subheader(f'Привет, {full_name}!')
         with col2:
             st.write('')
-            if st.button(label="Sign out", type="secondary"):
+            if st.button(label="Выйти", type="secondary"):
                 sign_out()
 
         st.write('###')
@@ -77,14 +77,14 @@ try:
         balance_amount = get_balance(user_id, token)
 
         with col_balance:
-            st.metric(label='Current Balance', value=f'{balance_amount.get("current_amount")} cr.')
+            st.metric(label='Текущий баланс', value=f'{balance_amount.get("current_amount")} cr.')
 
         with col_topup:
             # st.write("")
             # st.write("")
             topup_popover = st.popover('➕ Top-up')
             st.write("")
-            if st.button("Balance history", key="btn_balance_history"):
+            if st.button("История баланса", key="btn_balance_history"):
                 st.switch_page("pages/balance_history.py")
 
             with topup_popover:
@@ -114,7 +114,7 @@ try:
 
         st.divider()
 
-        st.write("List your favorite video games and I will recommend a game you would like")
+        st.write("О чём ты хочешь поговорить?")
 
         # Scrollable area
         # Prompts history
@@ -124,7 +124,7 @@ try:
             operations = get_operation_list(user_id, token)
 
             if not operations:
-                st.info('Nothing prompted yet')
+                st.info('В диалоге пока что нет сообщений')
             else:
                 # Render last 5 prompts
                 for op in operations:
@@ -136,7 +136,7 @@ try:
 
 
         #-- Prompt input field
-        if operation_input := st.chat_input('Enter games titles...'):
+        if operation_input := st.chat_input('Введите сообщение...'):
             with chat_container:
                 with st.chat_message('user'):
                     st.write(operation_input)
