@@ -17,7 +17,7 @@ from mlw_models.message import (MessageMLTaskType,
 
 logger = logging.getLogger(__name__)
 
-#-- ML model initialization
+#-- LLM model initialization
 MODEL_ID = os.getenv("MODEL_ID", "HuggingFaceTB/SmolLM2-1.7B-Instruct")
 QUANTIZATION_BITS = os.getenv("QUANTIZATION_BITS", "4")
 logger.info(f"--- Loading ML Model: {MODEL_ID} with {QUANTIZATION_BITS}-bit quantization")
@@ -40,6 +40,9 @@ generator = pipeline(
     model_kwargs={"quantization_config": bnb_config},
     device_map="auto"
 )
+
+
+
 def _warmup_model():
     logger.info("---Starting ML Model warmup (pre-loading weights into GPU---")
     try:
