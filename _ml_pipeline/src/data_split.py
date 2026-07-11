@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 class DataStratifier:
     """
     Класс для стратегического сплитования данных.
-    Реализует сэмплирование данных для MVP и выделение сэмпла для стресс-теста (длинные нейстральные тексты).
+    Реализует выделение сэмпла для стресс-теста (длинные нейтральные тексты)
+    и пропорциональное уменьшение датасета для отладочных выборок.
     """
     def __init__(
             self,
@@ -28,36 +29,47 @@ class DataStratifier:
             self,
             df: pd.DataFrame,
             train_size: float = 0.8,
-            micro_size: float = 0.1
+            fraction: float = 1.0  # Доля от всего датасета, которую нужно использовать (1.0 - full, 0.1 - micro, 0.01 - nano)
     ) -> Dict[str, pd.DataFrame]:
         """
-        Разделяет датафрейм на выборки: Train, Micro-Train, Val, Test и Stress-Test.
+        Разделяет датафрейм на выборки: Train, Val, Test и Stress-Test с сохранением пропорций.
         """
-        logger.info("Запуск процесса стратегического сплитования данных...")
+        logger.info(f"Запуск стратегического сплитования (Коэффициент сжатия: {fraction})...")
         df_clean = df.copy()
 
-        # 1. Находим кандидатов для стресс-теста (длинные нейтральные тексты)
+        # 0. Если требуется уменьшенная выборка (micro/nano) - честно стратифицированно сжимаем весь исходный датасет
+        if fraction < 1.0:
+            _, df_clean = train_test_split(
+                df_clean,
+                test_size=fraction,
+                stratify=df_clean[self.target_col],
+                random_state=self.random_state
+            )
+
+        # 1. Находим кандидатов для стресс-теста в текущем объеме данных
         stress_mask = (df_clean[self.target_col] == 0) & (df_clean[self.word_len_col] > self.stress_test_threshold)
         df_stress_candidate = df_clean[stress_mask]
         df_pool = df_clean[~stress_mask]
 
-        logger.info(f"Найдено кандидатов (длинных не-атак): {df_stress_candidate.shape[0]}")
-
-        # Проверка безопасности: если кандидаты есть, берем 10% в Stress-Test, а 90% возвращаем в пул обучения
+        # Проверка безопасности: берем 10% в Stress-Test, 90% возвращаем в пул
         if not df_stress_candidate.empty:
-            df_stress_test, df_long_normal_train = train_test_split(
-                df_stress_candidate,
-                test_size=0.9,  # 90% возвращаем в общий пул
-                random_state=self.random_state
-            )
-            df_pool = pd.concat([df_pool, df_long_normal_train], ignore_index=True)
-            logger.info(f"Выделено в финальный Stress-Test (10% от кандидатов): {df_stress_test.shape[0]}")
-            logger.info(f"Возвращено в обучающий пул для репрезентативности (90%): {df_long_normal_train.shape[0]}")
+            # Для очень маленьких выборок (nano) может оказаться всего 1-2 кандидата, тогда train_test_split упадет.
+            # Защита от этого:
+            if len(df_stress_candidate) > 5:
+                df_stress_test, df_long_normal_train = train_test_split(
+                    df_stress_candidate,
+                    test_size=0.9,
+                    random_state=self.random_state
+                )
+                df_pool = pd.concat([df_pool, df_long_normal_train], ignore_index=True)
+            else:
+                # Если кандидатов слишком мало, отдаем их все в пул обучения, а стресс-тест оставляем пустым
+                df_pool = pd.concat([df_pool, df_stress_candidate], ignore_index=True)
+                df_stress_test = pd.DataFrame(columns=df_clean.columns)
+                logger.warning(f"Мало кандидатов ({len(df_stress_candidate)}) для {fraction} сплита. Все ушли в обучение.")
         else:
-            logger.warning("Кандидаты для стресс-теста не найдены. Стресс-тест будет пустым.")
             df_stress_test = pd.DataFrame(columns=df_clean.columns)
 
-        # Проверка на наличие данных для дальнейшего сплита
         if df_pool.empty:
             raise ValueError("Пул данных пуст после извлечения Стресс-теста.")
 
@@ -77,30 +89,17 @@ class DataStratifier:
             random_state=self.random_state
         )
 
-        # 3. Формирование Micro-Train сэмпла для быстрой проверки MVP
-        _, df_train_micro = train_test_split(
-            df_train,
-            test_size=micro_size,
-            stratify=df_train[self.target_col],
-            random_state=self.random_state
-        )
-
-        logger.info("Сплитование успешно завершено")
-        self._print_stats(df_train, df_train_micro, df_val, df_test, df_stress_test)
+        # self._print_stats(df_train, df_val, df_test, df_stress_test) # Раскомментировать для отладки внутри класса
 
         return {
             'train': df_train,
-            'train_micro': df_train_micro,
             'val': df_val,
             'test': df_test,
             'stress_test': df_stress_test
         }
 
-    def _print_stats(self, train: pd.DataFrame, micro: pd.DataFrame, val: pd.DataFrame, test: pd.DataFrame, stress: pd.DataFrame):
-        """
-        Вывод баланса классов по выборкам для контроля утечек
-        """
-        for name, sdf in zip(['Train', 'Micro-Train', 'Validation', 'Test', 'Stress-Test'], [train, micro, val, test, stress]):
+    def _print_stats(self, train: pd.DataFrame, val: pd.DataFrame, test: pd.DataFrame, stress: pd.DataFrame):
+        for name, sdf in zip(['Train', 'Validation', 'Test', 'Stress-Test'], [train, val, test, stress]):
             total = sdf.shape[0]
             if total > 0 and self.target_col in sdf.columns:
                 pos_ratio = (sdf[self.target_col] == 1).sum() / total * 100

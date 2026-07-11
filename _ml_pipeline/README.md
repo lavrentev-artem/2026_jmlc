@@ -14,6 +14,7 @@ _На этапе PoC процесс полуавтоматический._
 - step-1_prepare_data.py - Трансформация данных, подготовка сплитованного набора датасетов для обучения проверок и сохранение их в ./data/processed
 - step-2_train_baseline_model.py - Обучение baseline модели TF-IDF + Logreg и сохранение артефактов в ./models/baseline/
 - step-3_train_target-base_model.py - Обучение target-base модели ModernBERT и сохранение артефактов в ./models/target-base/ ; target-base - это целевая модель с базовыми параметрами, которые могут быть улучшены на следующем этапе.
+- step-4_optimize_target_model.py - Автоматизированное улучшение target-base модели ModernBERT с перебором гиперпараметров по методу TPE.
 
 ### Отчёты
 В папку ./reports разово сохранены отчеты подготовки данных и обучения моделей для примера; эта папка отправляется в git.

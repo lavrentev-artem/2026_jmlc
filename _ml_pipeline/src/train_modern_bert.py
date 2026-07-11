@@ -71,7 +71,8 @@ class ModernBertTrainer:
         logger.info(f"Аппаратно выбранный режим точности вычислений: {precision_str}")
 
     def train(self, df_train: pd.DataFrame, target_col: str = 'jailbreak', output_dir: str = "./tmp_checkpoints",
-              epochs: int = 1, batch_size: int = 8, lr: float = 2e-5):
+                 epochs: int = 1, batch_size: int = 8, lr: float = 2e-5, weight_decay: float = 0.01,
+                 warmup_ratio: float = 0.0, gradient_accumulation_steps: int = 1):
         logger.info(f"Подготовка датасета для обучения ({df_train.shape[0]} строк)...")
         train_dataset = JailbreakDataset(
             texts=df_train['user_prompt'].fillna("").tolist(),
@@ -86,8 +87,10 @@ class ModernBertTrainer:
             output_dir=output_dir,
             num_train_epochs=epochs,
             per_device_train_batch_size=batch_size,
-            gradient_accumulation_steps=1,
+            gradient_accumulation_steps=gradient_accumulation_steps,
             learning_rate=lr,
+            weight_decay=weight_decay,
+            warmup_ratio=warmup_ratio,
             logging_steps=50,
             save_strategy="no",
             eval_strategy="no",
@@ -105,9 +108,12 @@ class ModernBertTrainer:
             data_collator=data_collator
         )
 
-        logger.info("Запуск градиентного спуска (Fine-Tuning)...")
+        logger.info(
+            f"Запуск градиентного спуска (Fine-Tuning). Accumulation: {gradient_accumulation_steps}, Warmup: {warmup_ratio}")
         trainer.train()
         logger.info("Обучение ModernBERT успешно завершено!")
+
+
 
     def evaluate(self, df_eval: pd.DataFrame, name: str = "Validation", target_col: str = 'jailbreak',
                  batch_size: int = 32):
@@ -153,12 +159,15 @@ class ModernBertTrainer:
         logger.info(f"[{name}] ROC AUC Score: {roc_auc_str}")
 
         if name == "Stress-Test":
-            report = classification_report(y_true, preds, labels=[0], target_names=["Safe (0)"], zero_division=0)
+            report_str = classification_report(y_true, preds, labels=[0], target_names=["Safe (0)"], zero_division=0)
+            # Принудительно генерируем словарь даже для одного класса
+            report_dict = classification_report(y_true, preds, labels=[0], target_names=["0"], output_dict=True, zero_division=0)
         else:
-            report = classification_report(y_true, preds, target_names=["Safe (0)", "Attack (1)"], zero_division=0)
+            report_str = classification_report(y_true, preds, target_names=["Safe (0)", "Attack (1)"], zero_division=0)
+            report_dict = classification_report(y_true, preds, output_dict=True, zero_division=0)
 
-        print(f"\n=== Результаты ModernBERT для выборки: {name} ===\n" + report)
-        return report, roc_auc
+        print(f"\n=== Результаты ModernBERT для выборки: {name} ===\n" + report_str)
+        return report_str, report_dict, roc_auc
 
     def save_model(self, save_dir: str):
         logger.info(f"Сохранение весов и токенизатора ModernBERT в {save_dir}...")

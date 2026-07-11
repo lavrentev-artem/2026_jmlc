@@ -53,9 +53,9 @@ class BaseLineTrainer:
         self.model.fit(X_train, y_train)
         logger.info("Обучение успешно завершено")
 
-    def evaluate(self, df_eval: pd.DataFrame, name: str = "Validation", target_col: str = 'jailbreak'):
+    def evaluate(self, df_eval: pd.DataFrame, name: str = "Validation", target_col: str = 'jailbreak') -> dict:
         """
-        Оценка модели с выводом метрик
+        Оценка модели с выводом метрик в консоль и возвратом словаря для JSON.
         """
         logger.info(f"Оценка модели на выборке: {name}")
         X_eval = self._prepare_features(df_eval, is_train=False)
@@ -70,12 +70,20 @@ class BaseLineTrainer:
             roc_auc = roc_auc_score(y_eval, probs)
             roc_auc_str = f"{roc_auc:.4f}"
         except ValueError:
+            roc_auc = None
             roc_auc_str = "undefined (only one class present in y_true)"
 
-        report = classification_report(y_eval, preds, digits=4, zero_division=0)
+        report_text = classification_report(y_eval, preds, digits=4, zero_division=0)
+        report_dict = classification_report(y_eval, preds, output_dict=True, zero_division=0)
 
         print("")
         print(f"=== Результаты для выборки: {name} ===")
         print(f"ROC AUC Score: {roc_auc_str}")
         print("Classification Report:")
-        print(report)
+        print(report_text)
+
+        # Возвращаем словарь с метриками
+        return {
+            "roc_auc": roc_auc,
+            "report_dict": report_dict
+        }
