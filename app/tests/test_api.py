@@ -18,7 +18,6 @@ def test_get_user_by_id_success(client: TestClient, session: Session, test_user_
     """
     Сценарий: Успешное получение свойств пользователя по его UUID.
     """
-    # Сохраняем тестового пользователя в In-Memory БД, чтобы crud_user смог его найти
     session.add(test_user_model)
     session.commit()
     session.refresh(test_user_model)
@@ -46,13 +45,13 @@ def test_get_user_by_id_not_found(client: TestClient):
     assert response.json()["detail"] == "User not found"
 
 def test_get_user_by_email_as_admin(client: TestClient, session: Session, test_user_model: User):
-    """Тестирование доступа администратора к поиску по email."""
+    """Сценарий: поиск пользователя по email (от роли Admin)."""
     # Делаем пользователя админом
     test_user_model.user_group = UserGroup.ADMIN
     session.add(test_user_model)
     session.commit()
 
-    # Переопределяем зависимость авторизации конкретно для этого теста
+    # Переопределяем зависимость авторизации
     from services.auth.auth import get_auth_user
     from api import app
     app.dependency_overrides[get_auth_user] = lambda: UserRead.model_validate(test_user_model)
