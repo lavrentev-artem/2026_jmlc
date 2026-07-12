@@ -28,11 +28,11 @@ def session_fixture():
 
 @pytest.fixture(name="test_user_model")
 def test_user_model_fixture():
-    """Базовый объект пользователя, который мы будем использовать для авторизации и тестов."""
+    """Базовый объект пользователя для авторизации и тестов."""
     return User(
         id=uuid.uuid4(),
-        email="developer_mentor@mit.edu",
-        full_name="MIT Professor",
+        email="tester_1@mail.test",
+        full_name="Tester_1",
         hashed_password="fake_secure_hash",
         status=UserStatus.ACTIVE,
         user_group=UserGroup.USER
