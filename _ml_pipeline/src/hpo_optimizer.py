@@ -69,7 +69,7 @@ class ModernBertHPOOptimizer:
             num_train_epochs=self.epochs,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
-            evaluation_strategy="epoch",  # Оцениваем модель каждую эпоху для HPO
+            eval_strategy="epoch",  # Оцениваем модель каждую эпоху для HPO
             save_strategy="no",
             logging_steps=10,
             bf16=self.use_bf16,

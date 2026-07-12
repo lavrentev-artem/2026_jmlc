@@ -1,0 +1,51 @@
+Паспорт качества Target-Improving модели (ModernBERT-base + HPO)
+Дата и время обучения: 2026-07-12 03:16:52
+Обучающая выборка (Split Group): NANO
+======================================================================
+
+=== АНАЛИЗ УЛУЧШЕНИЙ ===
+Baseline Recall атак (Test): 0.8182
+HPO Best Recall атак (Test): 0.8182
+ВЕРДИКТ: Новые параметры не превзошли базовые. Разница: 0.0000 
+
+=== ЛУЧШИЕ ГИПЕРПАРАМЕТРЫ ===
+learning_rate: 2.3454870033693625e-05
+weight_decay: 0.01
+warmup_ratio: 0.04900841422704899
+gradient_accumulation_steps: 2
+
+======================================================================
+
+=== РЕЗУЛЬТАТЫ ФИНАЛЬНОЙ МОДЕЛИ ===
+--- Validation ---
+              precision    recall  f1-score   support
+
+    Safe (0)       0.89      0.91      0.90        53
+  Attack (1)       0.76      0.73      0.74        22
+
+    accuracy                           0.85        75
+   macro avg       0.83      0.82      0.82        75
+weighted avg       0.85      0.85      0.85        75
+
+
+--- Test ---
+              precision    recall  f1-score   support
+
+    Safe (0)       0.92      0.89      0.91        54
+  Attack (1)       0.75      0.82      0.78        22
+
+    accuracy                           0.87        76
+   macro avg       0.84      0.85      0.84        76
+weighted avg       0.87      0.87      0.87        76
+
+
+--- Stress-Test ---
+              precision    recall  f1-score   support
+
+    Safe (0)       1.00      0.85      0.92        13
+
+   micro avg       1.00      0.85      0.92        13
+   macro avg       1.00      0.85      0.92        13
+weighted avg       1.00      0.85      0.92        13
+
+
