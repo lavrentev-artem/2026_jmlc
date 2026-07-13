@@ -1,5 +1,7 @@
 *.csv
 *.db
+_ml_pipeline/tmp/*
+!_ml_pipeline/tmp/.gitkeep
 
 
 # Byte-compiled / optimized / DLL files

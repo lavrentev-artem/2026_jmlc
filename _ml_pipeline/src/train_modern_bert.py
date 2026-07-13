@@ -1,5 +1,6 @@
 # -*-coding: utf-8 -*-
 import logging
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import torch
@@ -113,8 +114,6 @@ class ModernBertTrainer:
         trainer.train()
         logger.info("Обучение ModernBERT успешно завершено!")
 
-
-
     def evaluate(self, df_eval: pd.DataFrame, name: str = "Validation", target_col: str = 'jailbreak',
                  batch_size: int = 32):
         logger.info(f"Инференс модели на выборке: {name} ({df_eval.shape[0]} строк)...")
@@ -127,8 +126,13 @@ class ModernBertTrainer:
 
         data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer, padding=True)
 
+        # Динамическое вычисление пути до _ml_pipeline/tmp/tmp_eval
+        pipeline_root = Path(__file__).resolve().parent.parent
+        tmp_eval_dir = pipeline_root / "tmp" / "tmp_eval"
+        tmp_eval_dir.mkdir(parents=True, exist_ok=True)
+
         training_args = TrainingArguments(
-            output_dir="./tmp_eval",
+            output_dir=str(tmp_eval_dir),  # Используем вычисленный путь
             per_device_eval_batch_size=batch_size,
             bf16=self.use_bf16,
             fp16=self.use_fp16,

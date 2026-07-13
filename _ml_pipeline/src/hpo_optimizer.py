@@ -1,5 +1,6 @@
 # -*-coding: utf-8 -*-
 import logging
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import torch
@@ -12,11 +13,10 @@ from transformers import (
 )
 import optuna
 
-# Импортируем датасет из соседнего файла, чтобы не дублировать код
+# Импортируем датасет из соседнего файла
 from src.train_modern_bert import JailbreakDataset
 
 logger = logging.getLogger(__name__)
-
 
 class ModernBertHPOOptimizer:
     def __init__(self, tokenizer, model_name: str, max_length: int = 512, batch_size: int = 8, epochs: int = 1):
@@ -41,7 +41,6 @@ class ModernBertHPOOptimizer:
         """Метрика для Optuna (оптимизируем Recall по классу Атак)"""
         logits, labels = eval_pred
         preds = np.argmax(logits, axis=-1)
-        # Считаем recall для класса 1 (атаки)
         attack_recall = recall_score(labels, preds, pos_label=1, zero_division=0)
         return {"attack_recall": attack_recall}
 
@@ -58,6 +57,11 @@ class ModernBertHPOOptimizer:
         """Основной цикл автоматического поиска"""
         logger.info(f"Подготовка датасетов для HPO (Train: {df_train.shape[0]}, Val: {df_val.shape[0]})...")
 
+        # Динамическое вычисление пути до _ml_pipeline/tmp/tmp_hpo
+        pipeline_root = Path(__file__).resolve().parent.parent
+        tmp_hpo_dir = pipeline_root / "tmp" / "tmp_hpo"
+        tmp_hpo_dir.mkdir(parents=True, exist_ok=True)
+
         train_dataset = JailbreakDataset(df_train['user_prompt'].fillna("").tolist(), df_train['jailbreak'].tolist(),
                                          self.tokenizer, self.max_length)
         eval_dataset = JailbreakDataset(df_val['user_prompt'].fillna("").tolist(), df_val['jailbreak'].tolist(),
@@ -65,16 +69,16 @@ class ModernBertHPOOptimizer:
         data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer, padding=True)
 
         training_args = TrainingArguments(
-            output_dir="./tmp_hpo",
+            output_dir=str(tmp_hpo_dir),  # Используем вычисленный путь
             num_train_epochs=self.epochs,
             per_device_train_batch_size=self.batch_size,
             per_device_eval_batch_size=self.batch_size,
-            eval_strategy="epoch",  # Оцениваем модель каждую эпоху для HPO
+            eval_strategy="epoch",
             save_strategy="no",
             logging_steps=10,
             bf16=self.use_bf16,
             fp16=self.use_fp16,
-            report_to="mlflow",  # Автоматическая телеметрия в MLflow
+            report_to="mlflow",
             dataloader_num_workers=2
         )
 
